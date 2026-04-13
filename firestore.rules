@@ -1,0 +1,229 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, role, bio, github, linkedin, whatsapp, skills
+    //
+    // Collection: projects
+    // Fields: title, description, thumbnail, techStack, status, category, liveLink, githubLink, teamMembers, problemSolved
+    //
+    // Collection: chats
+    // Fields: senderId, senderName, text, timestamp, isRead
+    //
+    // Collection: blogs
+    // Fields: title, excerpt, content, author, authorId, date, category, image, readTime
+    //
+    // Collection: comments
+    // Fields: blogId, authorId, authorName, authorPhoto, text, timestamp
+    //
+    // Collection: gallery
+    // Fields: category, image, title, timestamp
+    //
+    // Collection: team
+    // Fields: name, role, category, image, bio, about, skills, funFact, socials, contributions, timestamp
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((request.auth.token.email == "sksjakaria@gmail.com" && request.auth.token.email_verified == true) ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    function isValidUser(data) {
+      let requiredFields = ['uid', 'email'];
+      let allowedFields = ['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'about', 'skills', 'socials', 'contributions', 'bio'];
+      return data.keys().hasAll(requiredFields) &&
+             data.keys().hasOnly(allowedFields) &&
+             data.uid is string &&
+             data.email is string &&
+             (!('role' in data) || data.role in ['admin', 'member', 'visitor']);
+    }
+
+    function isValidProject(data) {
+      let required = ['title', 'description', 'status', 'category', 'timestamp'];
+      let allowed = ['title', 'description', 'status', 'category', 'timestamp', 'thumbnail', 'techStack', 'liveLink', 'githubLink', 'teamMembers', 'problemSolved', 'id'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.title is string && data.title.size() < 200 &&
+             data.description is string && data.description.size() < 2000 &&
+             (!('thumbnail' in data) || (data.thumbnail is string && data.thumbnail.size() < 1000000));
+    }
+
+    function isValidChat(data) {
+      return data.keys().hasAll(['senderId', 'text', 'timestamp']) &&
+             data.text is string && data.text.size() < 1000;
+    }
+
+    function isValidBlog(data) {
+      let required = ['title', 'excerpt', 'content', 'author', 'authorId', 'date', 'category'];
+      let allowed = ['title', 'excerpt', 'content', 'author', 'authorId', 'date', 'category', 'image', 'readTime'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.title is string && data.title.size() < 200 &&
+             data.excerpt is string && data.excerpt.size() < 500 &&
+             data.content is string && data.content.size() < 10000 &&
+             (!('image' in data) || (data.image is string && data.image.size() < 1000000));
+    }
+
+    function isValidComment(data) {
+      let required = ['blogId', 'authorId', 'authorName', 'text', 'timestamp'];
+      let allowed = ['blogId', 'authorId', 'authorName', 'authorPhoto', 'text', 'timestamp', 'parentId', 'isEdited'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.text is string && data.text.size() < 1000 &&
+             data.authorId == request.auth.uid &&
+             (!('parentId' in data) || data.parentId is string) &&
+             (!('isEdited' in data) || data.isEdited is bool);
+    }
+
+    function isValidGalleryItem(data) {
+      let required = ['category', 'image', 'title', 'timestamp'];
+      let allowed = ['category', 'image', 'title', 'timestamp', 'id'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.title is string && data.title.size() < 200 &&
+             data.image is string && data.image.size() < 1000000 &&
+             data.category is string;
+    }
+
+    function isValidTeamMember(data) {
+      let required = ['name', 'role', 'category', 'image', 'bio', 'about', 'skills', 'timestamp'];
+      let allowed = ['name', 'role', 'category', 'image', 'bio', 'about', 'skills', 'funFact', 'socials', 'contributions', 'timestamp', 'id'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.name is string && data.name.size() < 100 &&
+             data.role is string && data.role.size() < 100 &&
+             data.category in ['Frontend', 'Backend', 'Designer', 'ML/AI'] &&
+             data.image is string && data.image.size() < 1000000 &&
+             data.bio is string && data.bio.size() < 500 &&
+             data.about is string && data.about.size() < 5000 &&
+             data.skills is list && data.skills.size() <= 20;
+    }
+
+    function isValidMessage(data) {
+      let required = ['name', 'email', 'subject', 'message', 'timestamp'];
+      let allowed = ['name', 'email', 'subject', 'message', 'timestamp', 'isRead'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.name is string && data.name.size() < 100 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             data.subject is string && data.subject.size() < 200 &&
+             data.message is string && data.message.size() < 5000;
+    }
+
+    function isValidService(data) {
+      let required = ['title', 'desc', 'iconName', 'features', 'timestamp'];
+      let allowed = ['title', 'desc', 'iconName', 'features', 'timestamp', 'color', 'bg', 'id'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.title is string && data.title.size() < 200 &&
+             data.desc is string && data.desc.size() < 1000 &&
+             data.iconName is string &&
+             data.features is list && data.features.size() <= 10;
+    }
+
+    function isValidNotification(data) {
+      let required = ['userId', 'title', 'message', 'isRead', 'timestamp'];
+      let allowed = ['userId', 'title', 'message', 'isRead', 'timestamp', 'type', 'link', 'id'];
+      return data.keys().hasAll(required) &&
+             data.keys().hasOnly(allowed) &&
+             data.userId is string &&
+             data.title is string && data.title.size() < 200 &&
+             data.message is string && data.message.size() < 1000 &&
+             data.isRead is bool;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data);
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProject(request.resource.data);
+      allow update: if isAdmin() && isValidProject(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /chats/{chatId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidChat(request.resource.data);
+      allow update: if isAdmin();
+    }
+
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidBlog(request.resource.data) && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAdmin() && isValidBlog(request.resource.data) && request.resource.data.authorId == resource.data.authorId;
+      allow delete: if isAdmin();
+    }
+
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidComment(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      resource.data.authorId == request.auth.uid && 
+                      isValidComment(request.resource.data) &&
+                      request.resource.data.blogId == resource.data.blogId;
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /gallery/{itemId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow update: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /team/{memberId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidTeamMember(request.resource.data);
+      allow update: if isAdmin() && isValidTeamMember(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAdmin();
+      allow create: if isValidMessage(request.resource.data);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    // Newsletter collection
+    match /newsletter/{subId} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.email is string && 
+                      request.resource.data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+      allow update, delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidService(request.resource.data);
+      allow update: if isAdmin() && isValidService(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.userId == 'admin' || resource.data.userId == 'sksjakaria@gmail.com');
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid) && isValidNotification(request.resource.data);
+      allow delete: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+    }
+  }
+}

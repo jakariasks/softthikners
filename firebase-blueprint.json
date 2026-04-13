@@ -1,0 +1,272 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "A user of the platform (team member or visitor)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "member", "visitor"] },
+        "bio": { "type": "string" },
+        "about": { "type": "string" },
+        "github": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "contributions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "project": { "type": "string" },
+              "role": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "project": {
+      "title": "Project",
+      "description": "A project built by the Softthikners team",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "techStack": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["Live", "In Progress", "Completed"] },
+        "category": { "type": "string", "enum": ["Web", "App", "AI/ML", "Tools"] },
+        "liveLink": { "type": "string" },
+        "githubLink": { "type": "string" },
+        "teamMembers": { "type": "array", "items": { "type": "string" } },
+        "problemSolved": { "type": "string" },
+        "timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "date": { "type": "string" },
+              "status": { "type": "string", "enum": ["completed", "current", "upcoming"] }
+            }
+          }
+        }
+      },
+      "required": ["title", "description", "status", "category"]
+    },
+    "chatMessage": {
+      "title": "Chat Message",
+      "description": "A real-time chat message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["senderId", "text", "timestamp"]
+    },
+    "blog": {
+      "title": "Blog Post",
+      "description": "A blog post written by a team member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "authorId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "readTime": { "type": "string" },
+        "metaTitle": { "type": "string" },
+        "metaDescription": { "type": "string" }
+      },
+      "required": ["title", "excerpt", "content", "author", "authorId", "date", "category"]
+    },
+    "comment": {
+      "title": "Comment",
+      "description": "A comment on a blog post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "blogId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string" },
+        "text": { "type": "string" },
+        "isEdited": { "type": "boolean" },
+        "parentId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["blogId", "authorId", "authorName", "text", "timestamp"]
+    },
+    "galleryItem": {
+      "title": "Gallery Item",
+      "description": "An image in the gallery",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "title": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "image", "title", "timestamp"]
+    },
+    "teamMember": {
+      "title": "Team Member",
+      "description": "A member of the Softthikners team",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "category": { "type": "string", "enum": ["Frontend", "Backend", "Designer", "ML/AI"] },
+        "image": { "type": "string" },
+        "bio": { "type": "string" },
+        "about": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "funFact": { "type": "string" },
+        "socials": {
+          "type": "object",
+          "properties": {
+            "github": { "type": "string" },
+            "linkedin": { "type": "string" },
+            "twitter": { "type": "string" },
+            "facebook": { "type": "string" },
+            "behance": { "type": "string" },
+            "web": { "type": "string" },
+            "scholar": { "type": "string" }
+          }
+        },
+        "contributions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "project": { "type": "string" },
+              "role": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "role", "category", "image", "bio", "about", "skills", "timestamp"]
+    },
+    "contactMessage": {
+      "title": "Contact Message",
+      "description": "A message sent via the contact form",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["name", "email", "subject", "message", "timestamp"]
+    },
+    "newsletterSubscription": {
+      "title": "Newsletter Subscription",
+      "description": "A user subscription to the newsletter",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "timestamp"]
+    },
+    "service": {
+      "title": "Service",
+      "description": "A service offered by Softthikners",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "desc": { "type": "string" },
+        "iconName": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "color": { "type": "string" },
+        "bg": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "desc", "iconName", "features", "timestamp"]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "A notification for a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "link": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "isRead", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profiles"
+    },
+    "/projects/{projectId}": {
+      "schema": "project",
+      "description": "Team projects"
+    },
+    "/chats/{chatId}": {
+      "schema": "chatMessage",
+      "description": "Real-time chat messages"
+    },
+    "/blogs/{blogId}": {
+      "schema": "blog",
+      "description": "Blog posts"
+    },
+    "/comments/{commentId}": {
+      "schema": "comment",
+      "description": "Blog post comments"
+    },
+    "/gallery/{itemId}": {
+      "schema": "galleryItem",
+      "description": "Gallery items"
+    },
+    "/team/{memberId}": {
+      "schema": "teamMember",
+      "description": "Team members"
+    },
+    "/messages/{messageId}": {
+      "schema": "contactMessage",
+      "description": "Contact form submissions"
+    },
+    "/newsletter/{subId}": {
+      "schema": "newsletterSubscription",
+      "description": "Newsletter subscriptions"
+    },
+    "/services/{serviceId}": {
+      "schema": "service",
+      "description": "Offered services"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "notification",
+      "description": "User notifications"
+    }
+  }
+}
